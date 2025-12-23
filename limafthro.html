@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ABSOLUTE CHAOS</title>
+<style>
+    body {
+        margin: 0;
+        background: black;
+        overflow: hidden;
+        cursor: none;
+    }
+
+    img {
+        position: absolute;
+        image-rendering: pixelated;
+        mix-blend-mode: difference;
+        animation: jitter 0.1s infinite alternate;
+    }
+
+    @keyframes jitter {
+        from { transform: translate(0, 0) rotate(0deg); }
+        to   { transform: translate(3px, -3px) rotate(2deg); }
+    }
+</style>
+</head>
+<body>
+
+<script>
+// ================= IMAGE CHAOS =================
+const IMAGE_COUNT = 100;
+
+function rand(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+for (let i = 0; i < IMAGE_COUNT; i++) {
+    const img = document.createElement("img");
+    const isGif = Math.random() > 0.5;
+
+    img.src = isGif
+        ? "https://media.giphy.com/media/" + Math.random().toString(36).substring(2, 10) + "/giphy.gif"
+        : `https://picsum.photos/${Math.floor(rand(50,800))}/${Math.floor(rand(50,800))}?r=${Math.random()}`;
+
+    img.style.left = rand(-200, innerWidth) + "px";
+    img.style.top = rand(-200, innerHeight) + "px";
+    img.style.width = rand(40, 600) + "px";
+    img.style.height = rand(40, 600) + "px";
+    img.style.opacity = rand(0.2, 1);
+    img.style.transform =
+        `scale(${rand(0.2,4)}, ${rand(0.2,4)}) rotate(${rand(0,360)}deg)`;
+
+    document.body.appendChild(img);
+}
+
+// ================= AUDIO CHAOS =================
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioCtx();
+
+const instruments = [
+    { type: "sine",   name: "flute" },
+    { type: "square", name: "synth" },
+    { type: "sawtooth", name: "violin" },
+    { type: "triangle", name: "organ" }
+];
+
+function playRandomInstrument() {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    const inst = instruments[Math.floor(Math.random() * instruments.length)];
+    osc.type = inst.type;
+
+    osc.frequency.value = rand(80, 1200); // pitch chaos
+    gain.gain.value = rand(0.05, 0.3);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + rand(0.1, 1.2));
+}
+
+function randomSoundLoop() {
+    const delay = rand(5000, 10000); // 5–10 sec
+    setTimeout(() => {
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        playRandomInstrument();
+        randomSoundLoop();
+    }, delay);
+}
+
+// Browser requires interaction for audio, so force unlock
+document.body.addEventListener("click", () => {
+    audioCtx.resume();
+    randomSoundLoop();
+}, { once: true });
+</script>
+
+</body>
+</html>
